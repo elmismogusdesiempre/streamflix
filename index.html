@@ -24,7 +24,6 @@ body{ background:var(--bg);color:var(--text); font-family:'Helvetica Neue',Arial
 .avatar{ width:34px;height:34px;border-radius:4px;background:var(--red); display:grid;place-items:center;font-weight:700;font-size:15px; cursor:pointer;user-select:none; }
 @media(max-width:768px){ .nav-links{display:none} .search-box input{width:120px} .search-box input:focus{width:150px} .logo{font-size:20px} }
 
-/* HERO CINEMATOGRÁFICO */
 .hero{
   position:relative;min-height:85vh;overflow:hidden;
   display:flex;align-items:center;
@@ -105,7 +104,8 @@ body.admin-mode .btn-edit-hero{display:inline-flex}
   height:100%;width:0;background:#fff;border-radius:2px;
 }
 .hero-indicator.active .hero-indicator-fill{
-  animation:heroFillBar 10s linear forwards;
+  animation:heroFillBar linear forwards;
+  animation-duration:40s;
 }
 @keyframes heroFillBar{
   from{width:0}
@@ -172,7 +172,8 @@ body.admin-mode .admin-bar{display:flex}
 .modal-body{padding:24px}
 .modal-body label{ display:block;font-size:13px;color:var(--muted);margin:12px 0 6px; }
 .modal-body label:first-child{margin-top:0}
-.modal-body input[type=text]{ width:100%;background:#0a0a0a;border:1px solid #333;color:#fff; padding:10px 12px;border-radius:4px;font-size:14px; }
+.modal-body input[type=text],
+.modal-body input[type=number]{ width:100%;background:#0a0a0a;border:1px solid #333;color:#fff; padding:10px 12px;border-radius:4px;font-size:14px; }
 .modal-body input:focus{outline:none;border-color:var(--red)}
 .edit-preview{margin-top:16px}
 .edit-preview img{width:100%;border-radius:6px;display:block}
@@ -202,6 +203,9 @@ body.admin-mode .admin-bar{display:flex}
 .hero-fields-note{
   font-size:11px;color:var(--muted);margin-bottom:12px;
   display:flex;align-items:center;gap:6px;
+}
+.hero-fields-hint{
+  font-size:11px;color:#666;margin-top:6px;display:block;line-height:1.5;
 }
 
 .player-modal{ position:fixed;inset:0;background:#000;z-index:300; display:none;flex-direction:column; }
@@ -297,11 +301,14 @@ body.admin-mode .admin-bar{display:flex}
       <div class="edit-preview" id="editPreview"></div>
 
       <div class="hero-fields-group" id="heroFieldsGroup" style="display:none">
-        <div class="hero-fields-note">🎬 Texto para la portada cinematográfica (opcional)</div>
+        <div class="hero-fields-note">🎬 Configuración de portada cinematográfica</div>
         <label>Título en portada</label>
         <input type="text" id="editHeroTitle" placeholder="Si lo dejas vacío, se usa el título del video" maxlength="80">
         <label>Descripción en portada</label>
         <input type="text" id="editHeroDesc" placeholder="Ej: Una aventura épica · Estreno 2025" maxlength="150">
+        <label>Duración en portada (segundos)</label>
+        <input type="number" id="editHeroDuration" min="5" max="180" step="1" placeholder="40">
+        <span class="hero-fields-hint">Cuántos segundos se reproducirá este video en el hero antes de pasar al siguiente. Por defecto: 40 s.</span>
       </div>
 
       <span class="verify-hint">
@@ -347,7 +354,7 @@ body.admin-mode .admin-bar{display:flex}
 <script>
 /* ============ CONSTANTES ============ */
 const STORAGE_KEY = 'streamflix_v1';
-const HERO_SECONDS = 10;
+const HERO_SECONDS_DEFAULT = 40;
 const CATEGORIES = [
   { id:'tendencias',   name:'Tendencias',   slots:8 },
   { id:'accion',       name:'Acción',       slots:8 },
@@ -378,6 +385,7 @@ let heroPlayerReady = false;
 let heroVideosList = [];
 let heroIndex = 0;
 let heroTimer = null;
+let heroPausedPosition = 0;
 let audioActivated = false;
 let userInteracted = false;
 let dataReady = false;
@@ -443,6 +451,13 @@ function setHeroStatus(msg){
   if(!el) return;
   if(msg){ el.textContent = msg; el.classList.remove('hidden'); }
   else { el.classList.add('hidden'); }
+}
+
+function getHeroDuration(slotKey){
+  const v = state.videos[slotKey];
+  const d = v && v.heroDuration;
+  if(typeof d === 'number' && d >= 5 && d <= 180) return d;
+  return HERO_SECONDS_DEFAULT;
 }
 
 /* ============ VERIFICACIÓN OEMBED ============ */
@@ -537,7 +552,6 @@ function checkHeroInit(){
 }
 document.addEventListener('ytReady', checkHeroInit);
 
-// Polling fallback por si el callback nunca llega
 let ytPollCount = 0;
 const ytPollInterval = setInterval(()=>{
   if(window.YT && window.YT.Player){
@@ -565,7 +579,6 @@ function createHeroPlayer(){
   const firstVideo = state.videos[firstSlot];
   if(!firstVideo) return;
 
-  // Asegurar que el contenedor ya tiene dimensiones antes de crear el player
   resizeHeroVideo();
   setHeroStatus('Cargando reproductor...');
 
@@ -597,6 +610,7 @@ function createHeroPlayer(){
       }
     });
     heroIndex = 0;
+    heroPausedPosition = 0;
   }catch(e){
     console.error('Error creando hero player:', e);
     setHeroStatus('Error al cargar el reproductor. Recarga la página.');
@@ -607,7 +621,6 @@ function onHeroPlayerReady(event){
   heroPlayerReady = true;
   setHeroStatus('');
 
-  // Forzar tamaño del iframe después de que YouTube lo inserte
   resizeHeroVideo();
   setTimeout(resizeHeroVideo, 100);
   setTimeout(resizeHeroVideo, 500);
@@ -622,29 +635,34 @@ function onHeroPlayerReady(event){
   renderHeroIndicators();
   updateHeroSoundBtn();
 
-  // Si el usuario ya interactuó antes de que el player estuviera listo, activar audio
   if(userInteracted && !audioActivated){
     setTimeout(()=>tryActivateAudio(false), 300);
   }
 
-  // Timer de avance por si PLAYING nunca llega (safety)
+  scheduleHeroAdvance();
+}
+
+function scheduleHeroAdvance(){
   clearTimeout(heroTimer);
-  heroTimer = setTimeout(advanceHero, HERO_SECONDS * 1000);
+  if(document.getElementById('playerModal').classList.contains('active')) return;
+  if(!heroVideosList.length) return;
+  const slotKey = heroVideosList[heroIndex];
+  const dur = getHeroDuration(slotKey);
+  const remaining = Math.max(1, dur - heroPausedPosition);
+  heroTimer = setTimeout(advanceHero, remaining * 1000);
 }
 
 function onHeroStateChange(event){
   if(!window.YT) return;
   if(event.data === YT.PlayerState.PLAYING){
-    clearTimeout(heroTimer);
-    heroTimer = setTimeout(advanceHero, HERO_SECONDS * 1000);
     if(audioActivated){
       try{ heroPlayer.unMute(); heroPlayer.setVolume(100); }catch(e){}
     }
+    scheduleHeroAdvance();
   } else if(event.data === YT.PlayerState.ENDED){
     clearTimeout(heroTimer);
     advanceHero();
   } else if(event.data === YT.PlayerState.PAUSED){
-    // Solo detener el timer si NO fue por apertura de modal
     if(!document.getElementById('playerModal').classList.contains('active')){
       clearTimeout(heroTimer);
     }
@@ -653,16 +671,19 @@ function onHeroStateChange(event){
 
 function onHeroError(){
   clearTimeout(heroTimer);
-  // Avanzar al siguiente video si este falla
   setTimeout(advanceHero, 1500);
 }
 
 function advanceHero(){
+  if(document.getElementById('playerModal').classList.contains('active')){
+    return;
+  }
   clearTimeout(heroTimer);
   heroVideosList = getTendenciasSlots();
   if(!heroVideosList.length){ renderHeroEmpty(); return; }
 
   heroIndex = (heroIndex + 1) % heroVideosList.length;
+  heroPausedPosition = 0;
   const v = state.videos[heroVideosList[heroIndex]];
   if(!v){ advanceHero(); return; }
 
@@ -672,17 +693,15 @@ function advanceHero(){
 
   if(heroPlayer && heroPlayerReady){
     try{
+      heroPlayer.loadVideoById(v.videoId);
       if(audioActivated){
-        heroPlayer.loadVideoById(v.videoId);
         heroPlayer.unMute();
         heroPlayer.setVolume(100);
       } else {
-        heroPlayer.loadVideoById(v.videoId);
         heroPlayer.mute();
       }
     }catch(e){}
-    // Safety timer
-    heroTimer = setTimeout(advanceHero, HERO_SECONDS * 1000);
+    scheduleHeroAdvance();
   }
 }
 
@@ -690,6 +709,7 @@ function jumpToHero(idx){
   clearTimeout(heroTimer);
   if(idx < 0 || idx >= heroVideosList.length) return;
   heroIndex = idx;
+  heroPausedPosition = 0;
   const v = state.videos[heroVideosList[idx]];
   if(!v) return;
   updateHeroText();
@@ -697,16 +717,15 @@ function jumpToHero(idx){
   updateHeroSoundBtn();
   if(heroPlayer && heroPlayerReady){
     try{
+      heroPlayer.loadVideoById(v.videoId);
       if(audioActivated){
-        heroPlayer.loadVideoById(v.videoId);
         heroPlayer.unMute();
         heroPlayer.setVolume(100);
       } else {
-        heroPlayer.loadVideoById(v.videoId);
         heroPlayer.mute();
       }
     }catch(e){}
-    heroTimer = setTimeout(advanceHero, HERO_SECONDS * 1000);
+    scheduleHeroAdvance();
   }
 }
 
@@ -735,7 +754,16 @@ function renderHeroIndicators(){
     const dot = document.createElement('div');
     dot.className = 'hero-indicator' + (idx === heroIndex ? ' active' : '');
     dot.onclick = (e) => { e.stopPropagation(); jumpToHero(idx); };
-    dot.innerHTML = '<div class="hero-indicator-fill"></div>';
+    const fill = document.createElement('div');
+    fill.className = 'hero-indicator-fill';
+    if(idx === heroIndex){
+      const dur = getHeroDuration(slotKey);
+      fill.style.animationDuration = dur + 's';
+      if(heroPausedPosition > 0){
+        fill.style.animationDelay = `-${heroPausedPosition}s`;
+      }
+    }
+    dot.appendChild(fill);
     container.appendChild(dot);
   });
 }
@@ -748,6 +776,56 @@ function renderHeroEmpty(){
   const indicators = document.getElementById('heroIndicators');
   if(indicators) indicators.innerHTML = '';
   setHeroStatus('');
+}
+
+/* ============ HERO — STOP / RESUME (FIX AUDIO DOBLE) ============ */
+function stopHeroPlayback(){
+  clearTimeout(heroTimer);
+  heroTimer = null;
+  if(heroPlayer && heroPlayerReady){
+    try{
+      const st = heroPlayer.getPlayerState();
+      if(window.YT && (st === YT.PlayerState.PLAYING || st === YT.PlayerState.PAUSED)){
+        heroPausedPosition = heroPlayer.getCurrentTime() || 0;
+      }
+      heroPlayer.pauseVideo();
+      heroPlayer.mute();
+    }catch(e){ heroPausedPosition = 0; }
+  }
+  // Pausar la animación de la barra activa
+  const activeFill = document.querySelector('.hero-indicator.active .hero-indicator-fill');
+  if(activeFill) activeFill.style.animationPlayState = 'paused';
+  updateHeroSoundBtn();
+}
+
+function resumeHeroPlayback(){
+  if(!heroPlayer || !heroPlayerReady) return;
+  if(!heroVideosList.length) return;
+  if(document.getElementById('playerModal').classList.contains('active')) return;
+
+  const slotKey = heroVideosList[heroIndex];
+  const dur = getHeroDuration(slotKey);
+
+  // Si ya se había terminado durante la pausa, avanzar
+  if(heroPausedPosition >= dur - 1){
+    heroPausedPosition = 0;
+    advanceHero();
+    return;
+  }
+
+  try{
+    if(audioActivated){ heroPlayer.unMute(); heroPlayer.setVolume(100); }
+    else { heroPlayer.mute(); }
+    if(heroPausedPosition > 0){
+      heroPlayer.seekTo(heroPausedPosition, true);
+    }
+    heroPlayer.playVideo();
+  }catch(e){}
+
+  // Sincronizar barra y timer con la posición guardada
+  renderHeroIndicators();
+  scheduleHeroAdvance();
+  updateHeroSoundBtn();
 }
 
 /* ============ HERO — AUDIO ============ */
@@ -894,7 +972,6 @@ function render(filter=''){
     updateHeroText();
     renderHeroIndicators();
     updateHeroSoundBtn();
-    // Si el player ya existe pero el hero está vacío por algún motivo, intentar crearlo
     if(!heroPlayer && window._ytReady && dataReady){
       setupHero();
     }
@@ -1025,9 +1102,8 @@ function playVideo(slotKey){
   if(!v) return;
   currentPlayingSlot = slotKey;
 
-  if(heroPlayer && heroPlayerReady){
-    try{ heroPlayer.pauseVideo(); }catch(e){}
-  }
+  // 🔇 FIX AUDIO DOBLE: detener por completo el hero antes de abrir el modal
+  stopHeroPlayback();
 
   document.getElementById('playerTitle').textContent = v.title;
 
@@ -1058,13 +1134,8 @@ function closePlayer(){
   document.getElementById('playerModal').classList.remove('active');
   currentPlayingSlot = null;
 
-  if(heroPlayer && heroPlayerReady){
-    try{
-      if(audioActivated){ heroPlayer.unMute(); heroPlayer.setVolume(100); }
-      else { heroPlayer.mute(); }
-      heroPlayer.playVideo();
-    }catch(e){}
-  }
+  // ▶ Reanudar el hero desde donde se pausó
+  resumeHeroPlayback();
 }
 
 document.addEventListener('fullscreenchange', ()=>{
@@ -1136,6 +1207,7 @@ function openEditModal(slotKey){
   document.getElementById('editTitleInput').value = v ? v.title : '';
   document.getElementById('editHeroTitle').value = v?.heroTitle || '';
   document.getElementById('editHeroDesc').value = v?.heroDesc || '';
+  document.getElementById('editHeroDuration').value = (v && v.heroDuration) ? v.heroDuration : HERO_SECONDS_DEFAULT;
   document.getElementById('editDeleteBtn').style.display = v ? '' : 'none';
   document.getElementById('heroFieldsGroup').style.display = isTendencias ? '' : 'none';
 
@@ -1182,6 +1254,10 @@ function saveEdit(){
   const heroTitle = document.getElementById('editHeroTitle').value.trim();
   const heroDesc = document.getElementById('editHeroDesc').value.trim();
 
+  let heroDuration = parseInt(document.getElementById('editHeroDuration').value, 10);
+  if(isNaN(heroDuration) || heroDuration < 5) heroDuration = HERO_SECONDS_DEFAULT;
+  if(heroDuration > 180) heroDuration = 180;
+
   if(verifyState === 'fail'){
     if(!confirm('⚠ La verificación falló. Este vídeo podría no reproducirse dentro de la app.\n\n¿Guardar de todos modos?')){
       return;
@@ -1191,6 +1267,7 @@ function saveEdit(){
   const existing = state.videos[editingSlotKey];
   const videoIdChanged = existing && existing.videoId !== id;
   const wasPlayingInHero = editingSlotKey === heroVideosList[heroIndex];
+  const durationChanged = !existing || existing.heroDuration !== heroDuration;
 
   state.videos[editingSlotKey] = {
     videoId: id,
@@ -1199,17 +1276,26 @@ function saveEdit(){
     liked: existing?.liked || false,
     heroTitle: heroTitle || '',
     heroDesc: heroDesc || '',
+    heroDuration: heroDuration,
   };
   saveState();
   closeEdit();
   render(document.getElementById('searchInput').value);
 
-  if(wasPlayingInHero && videoIdChanged && heroPlayer && heroPlayerReady){
-    try{
-      heroPlayer.loadVideoById(id);
-      if(audioActivated){ heroPlayer.unMute(); heroPlayer.setVolume(100); }
-      else { heroPlayer.mute(); }
-    }catch(e){}
+  if(wasPlayingInHero && heroPlayer && heroPlayerReady){
+    if(videoIdChanged){
+      try{
+        heroPlayer.loadVideoById(id);
+        if(audioActivated){ heroPlayer.unMute(); heroPlayer.setVolume(100); }
+        else { heroPlayer.mute(); }
+        heroPausedPosition = 0;
+        scheduleHeroAdvance();
+      }catch(e){}
+    } else if(durationChanged && !document.getElementById('playerModal').classList.contains('active')){
+      // Ajustar el timer y la animación al nuevo valor
+      renderHeroIndicators();
+      scheduleHeroAdvance();
+    }
   }
 
   showToast('✓ Vídeo guardado');
@@ -1228,9 +1314,11 @@ function deleteEdit(){
     clearTimeout(heroTimer);
     if(heroVideosList.length > 0){
       if(heroIndex >= heroVideosList.length) heroIndex = 0;
+      heroPausedPosition = 0;
       const v = state.videos[heroVideosList[heroIndex]];
       if(v && heroPlayer && heroPlayerReady){
         try{ heroPlayer.loadVideoById(v.videoId); }catch(e){}
+        scheduleHeroAdvance();
       }
       updateHeroText();
       renderHeroIndicators();
@@ -1318,6 +1406,9 @@ document.getElementById('editTitleInput').addEventListener('keydown', e=>{
 });
 document.getElementById('editUrl').addEventListener('keydown', e=>{
   if(e.key==='Enter') document.getElementById('editTitleInput').focus();
+});
+document.getElementById('editHeroDuration').addEventListener('keydown', e=>{
+  if(e.key==='Enter') saveEdit();
 });
 
 /* ============ INIT ============ */
