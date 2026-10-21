@@ -12,7 +12,6 @@
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
 body{ background:var(--bg);color:var(--text); font-family:'Helvetica Neue',Arial,sans-serif; overflow-x:hidden;min-height:100vh;min-height:100dvh; padding-bottom:60px; }
-/* NAV */
 .nav{ position:fixed;top:0;left:0;right:0;z-index:50; padding:16px 4%;display:flex;align-items:center;gap:32px; background:linear-gradient(to bottom,rgba(0,0,0,.85),rgba(0,0,0,0)); transition:background .3s; }
 .nav.scrolled{background:var(--bg2)}
 .logo{ color:var(--red);font-size:24px;font-weight:900;letter-spacing:-1.5px; cursor:pointer;user-select:none;flex-shrink:0; }
@@ -43,10 +42,14 @@ body{ background:var(--bg);color:var(--text); font-family:'Helvetica Neue',Arial
 #heroPlayerDiv{
   position:absolute;top:50%;left:50%;
   transform:translate(-50%,-50%);
+  width:100%;height:100%;
   border:0;pointer-events:none;
 }
 #heroPlayerDiv iframe{
-  width:100%;height:100%;border:0;display:block;
+  width:100% !important;
+  height:100% !important;
+  border:0;
+  display:block;
   pointer-events:none;
 }
 .hero-gradient{
@@ -85,7 +88,6 @@ body{ background:var(--bg);color:var(--text); font-family:'Helvetica Neue',Arial
 .btn-edit-hero:hover{background:rgba(0,0,0,.9);border-color:#fff}
 body.admin-mode .btn-edit-hero{display:inline-flex}
 
-/* INDICADORES DE PROGRESO */
 .hero-indicators{
   position:absolute;bottom:36px;left:4%;right:4%;
   display:flex;gap:8px;z-index:4;pointer-events:auto;
@@ -110,7 +112,6 @@ body.admin-mode .btn-edit-hero{display:inline-flex}
   to{width:100%}
 }
 
-/* BOTÓN DE SONIDO */
 .hero-sound-btn{
   position:absolute;bottom:32px;right:4%;
   width:46px;height:46px;border-radius:50%;
@@ -127,7 +128,14 @@ body.admin-mode .btn-edit-hero{display:inline-flex}
   50%{box-shadow:0 0 0 12px rgba(255,255,255,0)}
 }
 
-/* ROWS */
+.hero-status{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  z-index:2;color:#888;font-size:14px;text-align:center;
+  padding:20px;line-height:1.6;max-width:400px;
+  pointer-events:none;
+}
+.hero-status.hidden{display:none}
+
 .rows{padding:0 0 40px;position:relative;z-index:5;background:linear-gradient(to bottom,#000 0%,var(--bg) 60px,var(--bg) 100%)}
 .row{margin:28px 0}
 .row-title{ padding:0 4%;font-size:clamp(16px,1.8vw,22px);font-weight:700; margin-bottom:10px;display:flex;align-items:center;gap:12px; }
@@ -148,13 +156,11 @@ body.admin-mode .btn-edit-hero{display:inline-flex}
 .card-empty:hover{border-color:var(--red);color:var(--red)}
 body.admin-mode .card{border-color:rgba(229,9,20,.35)}
 
-/* ADMIN BAR */
 .admin-bar{ display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%); background:var(--red);color:#fff;padding:8px 16px;border-radius:30px; gap:12px;align-items:center;z-index:55;font-size:13px;font-weight:600; box-shadow:0 4px 20px rgba(229,9,20,.5); }
 body.admin-mode .admin-bar{display:flex}
 .admin-bar button{ background:rgba(0,0,0,.3);border:none;color:#fff; padding:6px 12px;border-radius:20px;cursor:pointer; font-size:12px;font-weight:600; }
 .admin-bar button:hover{background:rgba(0,0,0,.5)}
 
-/* MODALES */
 .modal{ position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:200; display:none;align-items:center;justify-content:center;padding:20px; }
 .modal.active{display:flex}
 .modal-content{ background:#181818;border-radius:8px;max-width:600px;width:100%; max-height:85vh;overflow-y:auto;border:1px solid #333; }
@@ -198,7 +204,6 @@ body.admin-mode .admin-bar{display:flex}
   display:flex;align-items:center;gap:6px;
 }
 
-/* PLAYER PRINCIPAL */
 .player-modal{ position:fixed;inset:0;background:#000;z-index:300; display:none;flex-direction:column; }
 .player-modal.active{display:flex}
 .player-header{ position:absolute;top:0;left:0;right:0;padding:14px 20px; display:flex;justify-content:space-between;align-items:center; background:linear-gradient(to bottom,rgba(0,0,0,.75),transparent); z-index:2;gap:12px; }
@@ -208,11 +213,9 @@ body.admin-mode .admin-bar{display:flex}
 .btn-icon:hover{background:rgba(255,255,255,.15)}
 #playerIframe{width:100%;height:100%;border:none;flex:1;background:#000;margin-top:0}
 
-/* TOAST */
 .toast{ position:fixed;bottom:30px;left:50%; transform:translateX(-50%) translateY(120px); background:#fff;color:#000;padding:12px 24px;border-radius:6px; font-weight:600;font-size:14px;z-index:400; transition:transform .3s;pointer-events:none; max-width:calc(100% - 40px);text-align:center; }
 .toast.show{transform:translateX(-50%) translateY(0)}
 
-/* LIST MODAL */
 .list-item{ display:flex;align-items:center;gap:12px;padding:12px; border-radius:4px;cursor:pointer;border:1px solid transparent; transition:all .15s; }
 .list-item:hover{background:#222}
 .list-item.checked{border-color:var(--red);background:rgba(229,9,20,.1)}
@@ -222,11 +225,11 @@ body.admin-mode .admin-bar{display:flex}
 .new-list-row input{flex:1}
 .search-empty{ padding:60px 4%;text-align:center;color:var(--muted); display:none;line-height:1.6;font-size:15px; }
 </style>
-<!-- Definir onYouTubeIframeAPIReady ANTES de cargar la API -->
 <script>
+  window._ytReady = false;
   window.onYouTubeIframeAPIReady = function() {
     window._ytReady = true;
-    document.dispatchEvent(new Event('ytReady'));
+    try { document.dispatchEvent(new Event('ytReady')); } catch(e){}
   };
 </script>
 <script src="https://www.youtube.com/iframe_api"></script>
@@ -250,12 +253,12 @@ body.admin-mode .admin-bar{display:flex}
   </div>
 </nav>
 
-<!-- HERO CINEMATOGRÁFICO -->
 <section class="hero" id="heroSection">
   <div class="hero-video-wrap">
     <div id="heroPlayerDiv"></div>
   </div>
   <div class="hero-gradient"></div>
+  <div class="hero-status" id="heroStatus">Cargando reproductor...</div>
   <div class="hero-content">
     <h1 class="hero-title" id="heroTitle">Bienvenido a StreamFlix</h1>
     <p class="hero-desc" id="heroDesc">Tu plataforma de streaming personal. 100% local. Funciona offline.</p>
@@ -270,14 +273,12 @@ body.admin-mode .admin-bar{display:flex}
 
 <main class="rows" id="rows"></main>
 
-<!-- ADMIN BAR -->
 <div class="admin-bar" id="adminBar">
   <span>🔓 Modo Admin</span>
   <button onclick="resetAll()">Reset todo</button>
   <button onclick="enterAdmin()">Salir</button>
 </div>
 
-<!-- EDIT MODAL -->
 <div class="modal" id="editModal">
   <div class="modal-content small">
     <div class="modal-header">
@@ -314,7 +315,6 @@ body.admin-mode .admin-bar{display:flex}
   </div>
 </div>
 
-<!-- LIST MODAL -->
 <div class="modal" id="listModal">
   <div class="modal-content small">
     <div class="modal-header">
@@ -325,7 +325,6 @@ body.admin-mode .admin-bar{display:flex}
   </div>
 </div>
 
-<!-- PLAYER PRINCIPAL -->
 <div class="player-modal" id="playerModal">
   <div class="player-header" id="playerHeader">
     <span id="playerTitle"></span>
@@ -374,14 +373,13 @@ let verifyState = 'idle';
 let verifyTimer = null;
 let autoTitle = '';
 
-/* ============ ESTADO HERO ============ */
 let heroPlayer = null;
 let heroPlayerReady = false;
 let heroVideosList = [];
 let heroIndex = 0;
 let heroTimer = null;
 let audioActivated = false;
-let ytReady = false;
+let userInteracted = false;
 let dataReady = false;
 
 /* ============ PERSISTENCIA ============ */
@@ -439,6 +437,12 @@ function showToast(msg){
   t.classList.add('show');
   clearTimeout(t._timer);
   t._timer = setTimeout(()=>t.classList.remove('show'), 2400);
+}
+function setHeroStatus(msg){
+  const el = document.getElementById('heroStatus');
+  if(!el) return;
+  if(msg){ el.textContent = msg; el.classList.remove('hidden'); }
+  else { el.classList.add('hidden'); }
 }
 
 /* ============ VERIFICACIÓN OEMBED ============ */
@@ -526,14 +530,26 @@ function getTendenciasSlots(){
   return slots;
 }
 
-/* ============ HERO — INICIALIZACIÓN ============ */
+/* ============ HERO — INIT ============ */
 function checkHeroInit(){
-  if(ytReady && dataReady) setupHero();
+  if(!window._ytReady || !dataReady) return;
+  setupHero();
 }
 document.addEventListener('ytReady', checkHeroInit);
 
+// Polling fallback por si el callback nunca llega
+let ytPollCount = 0;
+const ytPollInterval = setInterval(()=>{
+  if(window.YT && window.YT.Player){
+    window._ytReady = true;
+    clearInterval(ytPollInterval);
+    checkHeroInit();
+  }
+  if(++ytPollCount > 30) clearInterval(ytPollInterval);
+}, 500);
+
 function setupHero(){
-  if(!ytReady) return;
+  if(!window._ytReady || !window.YT || !window.YT.Player) return;
   heroVideosList = getTendenciasSlots();
   if(!heroVideosList.length){
     renderHeroEmpty();
@@ -549,6 +565,10 @@ function createHeroPlayer(){
   const firstVideo = state.videos[firstSlot];
   if(!firstVideo) return;
 
+  // Asegurar que el contenedor ya tiene dimensiones antes de crear el player
+  resizeHeroVideo();
+  setHeroStatus('Cargando reproductor...');
+
   const playerVars = {
     autoplay: 1,
     mute: 1,
@@ -558,35 +578,58 @@ function createHeroPlayer(){
     playsinline: 1,
     iv_load_policy: 3,
     disablekb: 1,
-    fs: 0
+    fs: 0,
+    showinfo: 0
   };
-  if(location.protocol !== 'file:') playerVars.origin = location.origin;
+  if(location.protocol !== 'file:'){
+    playerVars.origin = location.origin;
+  }
 
-  heroPlayer = new YT.Player('heroPlayerDiv', {
-    videoId: firstVideo.videoId,
-    playerVars,
-    events: {
-      onReady: onHeroPlayerReady,
-      onStateChange: onHeroStateChange,
-      onError: onHeroError
-    }
-  });
-  heroIndex = 0;
+  try{
+    heroPlayer = new YT.Player('heroPlayerDiv', {
+      videoId: firstVideo.videoId,
+      host: 'https://www.youtube-nocookie.com',
+      playerVars,
+      events: {
+        onReady: onHeroPlayerReady,
+        onStateChange: onHeroStateChange,
+        onError: onHeroError
+      }
+    });
+    heroIndex = 0;
+  }catch(e){
+    console.error('Error creando hero player:', e);
+    setHeroStatus('Error al cargar el reproductor. Recarga la página.');
+  }
 }
 
 function onHeroPlayerReady(event){
   heroPlayerReady = true;
+  setHeroStatus('');
+
+  // Forzar tamaño del iframe después de que YouTube lo inserte
+  resizeHeroVideo();
+  setTimeout(resizeHeroVideo, 100);
+  setTimeout(resizeHeroVideo, 500);
+
   try{
     event.target.mute();
+    event.target.setVolume(0);
     event.target.playVideo();
-  }catch(e){}
-  resizeHeroVideo();
+  }catch(e){ console.error(e); }
+
   updateHeroText();
   renderHeroIndicators();
-  // Intento silencioso de desmutear
-  setTimeout(() => {
-    if(!audioActivated) tryActivateAudio(false);
-  }, 400);
+  updateHeroSoundBtn();
+
+  // Si el usuario ya interactuó antes de que el player estuviera listo, activar audio
+  if(userInteracted && !audioActivated){
+    setTimeout(()=>tryActivateAudio(false), 300);
+  }
+
+  // Timer de avance por si PLAYING nunca llega (safety)
+  clearTimeout(heroTimer);
+  heroTimer = setTimeout(advanceHero, HERO_SECONDS * 1000);
 }
 
 function onHeroStateChange(event){
@@ -601,40 +644,45 @@ function onHeroStateChange(event){
     clearTimeout(heroTimer);
     advanceHero();
   } else if(event.data === YT.PlayerState.PAUSED){
-    clearTimeout(heroTimer);
+    // Solo detener el timer si NO fue por apertura de modal
+    if(!document.getElementById('playerModal').classList.contains('active')){
+      clearTimeout(heroTimer);
+    }
   }
 }
 
 function onHeroError(){
   clearTimeout(heroTimer);
-  setTimeout(advanceHero, 2000);
+  // Avanzar al siguiente video si este falla
+  setTimeout(advanceHero, 1500);
 }
 
 function advanceHero(){
   clearTimeout(heroTimer);
   heroVideosList = getTendenciasSlots();
-  if(!heroVideosList.length) return;
+  if(!heroVideosList.length){ renderHeroEmpty(); return; }
+
   heroIndex = (heroIndex + 1) % heroVideosList.length;
   const v = state.videos[heroVideosList[heroIndex]];
   if(!v){ advanceHero(); return; }
 
   updateHeroText();
   renderHeroIndicators();
+  updateHeroSoundBtn();
 
   if(heroPlayer && heroPlayerReady){
-    try{ heroPlayer.loadVideoById(v.videoId); }catch(e){}
-    setTimeout(() => {
-      if(heroPlayer && heroPlayerReady){
-        try{
-          if(audioActivated){
-            heroPlayer.unMute();
-            heroPlayer.setVolume(100);
-          } else {
-            heroPlayer.mute();
-          }
-        }catch(e){}
+    try{
+      if(audioActivated){
+        heroPlayer.loadVideoById(v.videoId);
+        heroPlayer.unMute();
+        heroPlayer.setVolume(100);
+      } else {
+        heroPlayer.loadVideoById(v.videoId);
+        heroPlayer.mute();
       }
-    }, 600);
+    }catch(e){}
+    // Safety timer
+    heroTimer = setTimeout(advanceHero, HERO_SECONDS * 1000);
   }
 }
 
@@ -646,18 +694,19 @@ function jumpToHero(idx){
   if(!v) return;
   updateHeroText();
   renderHeroIndicators();
+  updateHeroSoundBtn();
   if(heroPlayer && heroPlayerReady){
-    try{ heroPlayer.loadVideoById(v.videoId); }catch(e){}
-    setTimeout(() => {
-      if(heroPlayer && heroPlayerReady){
-        try{
-          if(audioActivated){
-            heroPlayer.unMute();
-            heroPlayer.setVolume(100);
-          }
-        }catch(e){}
+    try{
+      if(audioActivated){
+        heroPlayer.loadVideoById(v.videoId);
+        heroPlayer.unMute();
+        heroPlayer.setVolume(100);
+      } else {
+        heroPlayer.loadVideoById(v.videoId);
+        heroPlayer.mute();
       }
-    }, 500);
+    }catch(e){}
+    heroTimer = setTimeout(advanceHero, HERO_SECONDS * 1000);
   }
 }
 
@@ -698,6 +747,7 @@ function renderHeroEmpty(){
   document.getElementById('heroSoundBtn').style.display = 'none';
   const indicators = document.getElementById('heroIndicators');
   if(indicators) indicators.innerHTML = '';
+  setHeroStatus('');
 }
 
 /* ============ HERO — AUDIO ============ */
@@ -735,7 +785,7 @@ function updateHeroSoundBtn(){
     return;
   }
   btn.style.display = 'flex';
-  if(audioActivated && !heroPlayer.isMuted()){
+  if(audioActivated && heroPlayer && !heroPlayer.isMuted()){
     btn.textContent = '🔊';
     btn.classList.remove('pulse');
     btn.title = 'Silenciar';
@@ -746,22 +796,26 @@ function updateHeroSoundBtn(){
   }
 }
 
-// Primer clic en cualquier parte → intentar activar audio
-function globalFirstClick(){
-  if(audioActivated) return;
-  tryActivateAudio(false);
+function onFirstUserGesture(){
+  if(userInteracted) return;
+  userInteracted = true;
+  if(!audioActivated) tryActivateAudio(false);
 }
-document.addEventListener('click', globalFirstClick);
-document.addEventListener('touchstart', globalFirstClick);
+document.addEventListener('click', onFirstUserGesture);
+document.addEventListener('touchstart', onFirstUserGesture);
+document.addEventListener('keydown', onFirstUserGesture);
 
 /* ============ HERO — RESIZE (ULTRA ZOOM) ============ */
 function resizeHeroVideo(){
   const wrap = document.querySelector('.hero-video-wrap');
   const iframe = document.getElementById('heroPlayerDiv');
   if(!wrap || !iframe) return;
-  const cw = wrap.clientWidth;
-  const ch = wrap.clientHeight;
-  if(!cw || !ch) return;
+
+  let cw = wrap.clientWidth;
+  let ch = wrap.clientHeight;
+  if(!cw) cw = window.innerWidth;
+  if(!ch) ch = Math.max(400, Math.floor(window.innerHeight * 0.85));
+
   const targetRatio = 16/9;
   const containerRatio = cw / ch;
   let w, h;
@@ -778,8 +832,12 @@ function resizeHeroVideo(){
 
 window.addEventListener('resize', resizeHeroVideo);
 window.addEventListener('orientationchange', () => setTimeout(resizeHeroVideo, 200));
+window.addEventListener('load', () => {
+  resizeHeroVideo();
+  setTimeout(resizeHeroVideo, 200);
+  setTimeout(resizeHeroVideo, 800);
+});
 
-// ResizeObserver para detectar cambios de tamaño del contenedor
 if(window.ResizeObserver){
   document.addEventListener('DOMContentLoaded', () => {
     const wrap = document.querySelector('.hero-video-wrap');
@@ -792,7 +850,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const hero = document.getElementById('heroSection');
   if(!hero) return;
   hero.addEventListener('click', (e) => {
-    if(e.target.closest('button, a, .hero-indicator, .hero-indicators, .hero-sound-btn')) return;
+    if(e.target.closest('button, a, .hero-indicator, .hero-indicators, .hero-sound-btn, .hero-content')) return;
     if(!heroVideosList.length) return;
     if(adminMode){
       openEditModal(heroVideosList[heroIndex]);
@@ -828,7 +886,6 @@ function render(filter=''){
     rows.appendChild(empty);
   }
 
-  // Refrescar hero
   heroVideosList = getTendenciasSlots();
   if(!heroVideosList.length){
     renderHeroEmpty();
@@ -837,6 +894,10 @@ function render(filter=''){
     updateHeroText();
     renderHeroIndicators();
     updateHeroSoundBtn();
+    // Si el player ya existe pero el hero está vacío por algún motivo, intentar crearlo
+    if(!heroPlayer && window._ytReady && dataReady){
+      setupHero();
+    }
   }
 }
 
@@ -964,7 +1025,6 @@ function playVideo(slotKey){
   if(!v) return;
   currentPlayingSlot = slotKey;
 
-  // Pausar hero para evitar audio doble
   if(heroPlayer && heroPlayerReady){
     try{ heroPlayer.pauseVideo(); }catch(e){}
   }
@@ -998,9 +1058,12 @@ function closePlayer(){
   document.getElementById('playerModal').classList.remove('active');
   currentPlayingSlot = null;
 
-  // Reanudar hero
   if(heroPlayer && heroPlayerReady){
-    try{ heroPlayer.playVideo(); }catch(e){}
+    try{
+      if(audioActivated){ heroPlayer.unMute(); heroPlayer.setVolume(100); }
+      else { heroPlayer.mute(); }
+      heroPlayer.playVideo();
+    }catch(e){}
   }
 }
 
@@ -1141,9 +1204,12 @@ function saveEdit(){
   closeEdit();
   render(document.getElementById('searchInput').value);
 
-  // Si es el video que está en el hero y cambió el videoId, recargarlo
   if(wasPlayingInHero && videoIdChanged && heroPlayer && heroPlayerReady){
-    try{ heroPlayer.loadVideoById(id); }catch(e){}
+    try{
+      heroPlayer.loadVideoById(id);
+      if(audioActivated){ heroPlayer.unMute(); heroPlayer.setVolume(100); }
+      else { heroPlayer.mute(); }
+    }catch(e){}
   }
 
   showToast('✓ Vídeo guardado');
@@ -1158,7 +1224,6 @@ function deleteEdit(){
   closeEdit();
   render(document.getElementById('searchInput').value);
 
-  // Si era el que estaba en el hero, refrescar el hero
   if(wasPlayingInHero){
     clearTimeout(heroTimer);
     if(heroVideosList.length > 0){
